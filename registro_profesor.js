@@ -1,6 +1,7 @@
 // Importaciones de Firebase (sin cambios)
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js";
+import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
 
 // Configuración de Firebase (sin cambios)
 const firebaseConfig = {
@@ -128,12 +129,30 @@ if (registrationForm) {
         if (isValid) {
             const email = emailInput.value;
             const password = passwordInput.value;
+            const nombre = nombreInput.value.trim();
+            const apellido = apellidoInput.value.trim();
+            const telefono = telefonoInput.value.trim();
+            const institucion = institucionInput.value.trim();
 
             try {
                 console.log('Intentando registrar maestro con:', { email, password });
                 const userCredential = await createUserWithEmailAndPassword(auth, email, password);
                 const user = userCredential.user;
-                console.log('Maestro registrado:', user);
+
+                // Guardar información adicional en Firestore
+                const db = getFirestore(app);
+                const maestrosCollection = collection(db, 'maestros');
+                await addDoc(maestrosCollection, {
+                    uid: user.uid,
+                    nombre: nombre,
+                    apellido: apellido,
+                    telefono: telefono,
+                    institucion: institucion,
+                    email: email,
+                    fechaRegistro: new Date()
+                });
+
+                console.log('Maestro registrado y datos guardados en Firestore:', user);
                 registrationForm.reset();
                 window.location.href = 'maestro.html';
             } catch (error) {

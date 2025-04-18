@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js";
-import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+import { getFirestore, doc, getDoc, query, where, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
 
 // Your web app's Firebase configuration (asegúrate de usar la misma configuración que en index.html)
 const firebaseConfig = {
@@ -35,13 +35,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 } else {
                     // Si displayName es null, busca en la base de datos de Firestore
                     console.log('UID del usuario justo antes de la consulta:', user.uid);
-                    const maestroDocRef = doc(db, 'maestros', user.uid); // Asume una colección 'maestros'
-                    const maestroDocSnap = await getDoc(maestroDocRef);
-                    console.log('maestroDocSnap:', maestroDocSnap);
 
-                    if (maestroDocSnap.exists()) {
-                        const data = maestroDocSnap.data();
+                    // Realiza una consulta en la colección 'maestros' buscando por el campo 'uid'
+                    const maestrosCollection = collection(db, 'maestros');
+                    const q = query(maestrosCollection, where('uid', '==', user.uid));
+                    const querySnapshot = await getDocs(q);
+
+                    if (!querySnapshot.empty) {
+                        const maestroDoc = querySnapshot.docs[0]; // Obtén el primer documento que coincida
+                        const data = maestroDoc.data();
                         console.log('Datos del documento del maestro:', data);
+
                         if (data && data.nombre) {
                             const primerNombreDB = data.nombre.split(' ')[0];
                             nombreProfesorElement.textContent = `Prof. ${primerNombreDB}`;
